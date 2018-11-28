@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>test</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+</head>
+<style rel="css">
+	.content-block{
+	width: 60%;
+	margin: 0px auto;
+	padding: 30px 0px;
+	background-color: white;
+	text-align: center;
+	}
+	body, pre{
+		background: white;
+		color:black;
+	}
+	pre{
+		border: medium solid white;
+	}
+	button{
+		border-color: white;
+		background: #FFFFFF;
+		color: white;
+		border-color: darkturquoise;
+		background-color: darkturquoise;
+		padding: 10px 30px;
+		margin: 30px;
+	}
+	button:hover{
+		background-color: #24A0AE;
+	}
+	.URLinput{
+		display: none;
+	}
+	h1{
+		display: inline-block;
+		background: #F6B297;
+		width: 100%;
+		text-align: center;
+		color: white;
+		padding: 20px;
+		margin: 0px;
+	}
+	.input-box{
+		display: inline-block;
+	}
+	img{
+		margin: 30px;
+		max-width: 100%;
+	}
+</style>
+<body>
+	<h1>うんちチェッカー</h1>
+	<div class="content-block">
+    <p class="URLinput">
+        image URL: <input id="js--url" type="text">
+    </p>
+    <p>
+      <!--<input type="file" id="file_input" accept="image/*"></input>-->
+      <div class="input-box">
+		<input class="file_input" id="src_image" name= "file" type="file" accept="image/*">
+	  </div>
+      <div class="result"></div>
+    </p>
+    <p>
+        <button id="js--button_search">check!</button>
+    </p>
+
+  <img id="js--result-img" src="" alt="" style="width: 400px;">
+    <pre id="js--result">
+...
+    </pre>
+	<pre id="js--result-photo">
+　 　　<img src="http://web.sfc.keio.ac.jp/~s16024kw/wordpress/wp-content/uploads/2018/11/gahag-0096085501.png" alt="不具合発生中だよ！でも、認識はできるよ！" style="width: 400px; margin: 0px;">
+    </pre>
+        <script>
+        //画像の表示
+          var reader = new FileReader();
+
+          reader.addEventListener('load', function(){
+            　 $('.result').html('<img src="'+reader.result+'">');
+          });
+
+          $('.file_input').change(function(){
+               if (this.files[0].type.match(/image/)){
+                     reader.readAsDataURL(this.files[0]);
+               }
+          });
+
+　　　　　//画像認識
+          $(function(){
+               $('#js--button_search').click(function(){
+                 　//jsonデータ？？azureの基本データ
+                　　　$.ajax({
+                          url: "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/Prediction/2d80c229-0fb8-4257-83e9-cf39cd15c677/image?iterationId=78a3d81a-7558-485e-b4f3-76f4fbac8e40",
+                          beforeSend: function(xhrObj){
+                               // Request headers
+                               xhrObj.setRequestHeader("Content-Type"," application/octet-stream");
+                               xhrObj.setRequestHeader("Prediction-key","df1267f033ef44c9a275a143b72d144c");
+                          },
+                          type: "POST",
+                          data: $("input[name='file']").prop("files")[0],
+                          processData: false,
+                          contentType: false,
+                          dataType: "json",
+                     })
+
+　　　　　　　　　　　//通信がうまくいったとき
+                    .done(function(data) {
+                          //alert("success");
+                          console.log(data)
+                          let text = '';
+                          let text_result = '';
+                          for( let i=0; i<data.predictions.length; i++ ){
+                               text = text + data.predictions[i].tagName + " --- " + parseFloat(data.predictions[i].probability) * 100 + " %";
+                               text = text + "\n";
+                               let azure_result_top　=　data.predictions[0].tagName
+                               let azure_result_secondry　= data.predictions[1].tagName
+                              //パーセンテージが高い方を選ぶ
+                               if (azure_result_top == "poop_strawberry"){
+                                    text_result = text + "\n" + "異常便（腸重積の疑い）を検知しました";
+								                    photo_result = "http://web.sfc.keio.ac.jp/~s16024kw/wordpress/wp-content/uploads/2018/11/4b5177fb264695c27675c0a36d371672.png"
+                                  }else{
+								                            if (azure_result_top == "poop_white"){
+                                    	         text_result = text + "\n" + "異常便（ロタウイルス感染・胆道閉鎖症の疑い）を検知しました";
+								    	                         photo_result = "http://web.sfc.keio.ac.jp/~s16024kw/wordpress/wp-content/uploads/2018/11/4b5177fb264695c27675c0a36d371672.png"
+								                                     }else{
+                                                       if (azure_result_top == "poop_yellow") {
+                                                         text_result = text + "\n" + "正常便を検知しました";
+                     								                     photo_result = "http://web.sfc.keio.ac.jp/~s16024kw/wordpress/wp-content/uploads/2018/11/bbf00b47ec54602c60856ded820958d5.png"
+                                                       }else {
+                                                         if (azure_result_top == "poop_brownandred") {
+                                                           text_result = text + "\n" + "異常便（赤痢・O157の疑い）を検知しました";
+                       								                     photo_result = "http://web.sfc.keio.ac.jp/~s16024kw/wordpress/wp-content/uploads/2018/11/4b5177fb264695c27675c0a36d371672.png"
+                                                         }else{
+										                                               text_result = text + "\n" + "正常便（便秘）を検知しました。";
+								    	                                             photo_result = "http://web.sfc.keio.ac.jp/~s16024kw/wordpress/wp-content/uploads/2018/11/056df9d0b84b21320cf41750c9689a56.png"
+								                                                         }
+                                                                       }
+                                                                     }
+                                                                   }
+                                                                 }
+　　　　　　　　　　　　　　　//js--resultに結果を表示
+                          $('#js--result').text(text_result)
+					      $('#js--result-photo').children('img').attr('src',photo_result)
+                   })
+
+　　　　　　　　　　　//通信がダメだった時
+                   .fail(function() {
+                         alert("error");
+                   });
+
+              });
+        });
+    </script>
+	</div>
+</body>
+</html>
