@@ -16,7 +16,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(GPIO_PIN, GPIO.IN)
 
 #slackのtoken
-token = "xoxp-521111483060-521174896243-522686118886-da93feb006ab9e3e54c9bb0ec9267764"
+token = "****"
 slacker = Slacker(token)
 # #toiletに送信
 channel_name = "#"+"toilet"
